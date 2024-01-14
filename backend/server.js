@@ -5,17 +5,39 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cors = require('cors'); 
 
+
 app.use(bodyParser.json()); 
 app.use(cors());
 
-const url = "mongodb+srv://root:Shubu%40123@testing.rdqvgba.mongodb.net/SIH2023";
+const url = "mongodb+srv://root:Shubu%40123@testing.rdqvgba.mongodb.net/DEEPAKSIR";
 mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const User = require('./models/Users'); 
 
 const nodemailer = require('nodemailer'); 
 
-app.post('/signup', async (req, res) => {
+app.post('/login', async (req, res) => {
+  const { rollNumber, dob } = req.body;
+
+  try {
+    // Find a user with the provided roll number and dob
+    const user = await User.findOne({ rollNumber, dob });
+
+    if (user) {
+      // User found, authentication successful
+      res.json({ message: 'Login successful' });
+    } else {
+      // User not found or invalid credentials
+      res.status(401).json({ message: 'Invalid credentials' });
+    }
+  } catch (error) {
+    // Handle any errors that occurred during the database query
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post('/addUser', async (req, res) => {
   try {
     const { email, password, userGroup } = req.body;
 
@@ -35,26 +57,7 @@ app.post('/signup', async (req, res) => {
   }
 });
 
-app.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
-
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
-
-    res.status(200).json({ message: 'Login successful', user: { userGroup: user.userGroup } });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
 
 app.get('/', (req, res) => {
   res.send('Hello from the backend!');
