@@ -66,7 +66,7 @@ app.post('/addUser', async (req, res) => {
 // Multer configuration for handling file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, './uploads'); // Set your desired upload directory
+    cb(null, './'); // Set your desired upload directory
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + '-' + file.originalname);
