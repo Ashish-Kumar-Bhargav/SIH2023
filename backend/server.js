@@ -4,6 +4,7 @@ const port = 3001;
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cors = require('cors'); 
+const multer = require('multer'); // For handling file uploads
 
 
 app.use(bodyParser.json()); 
@@ -12,7 +13,11 @@ app.use(cors());
 const url = "mongodb+srv://root:Shubu%40123@testing.rdqvgba.mongodb.net/DEEPAKSIR";
 mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true });
 
-const User = require('./models/Users'); 
+const User = require('./models/Users');
+const Question = require('./models/Questions');
+
+
+
 
 const nodemailer = require('nodemailer'); 
 
@@ -56,6 +61,60 @@ app.post('/addUser', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+
+// Multer configuration for handling file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './uploads'); // Set your desired upload directory
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage });
+
+app.post('/addQuestion', upload.single('questionImage'), async (req, res) => {
+  try {
+    const {
+      question,
+      option1,
+      option2,
+      option3,
+      option4,
+      correctOption,
+    } = req.body;
+
+    const newQuestion = new Question({
+      question,
+      option1,
+      option2,
+      option3,
+      option4,
+      correctOption,
+      imageUploadPath: req.file ? req.file.path : null,
+    });
+
+    await newQuestion.save();
+
+    res.status(201).json({ message: 'Question added successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.get('/questions', async (req, res) => {
+  try {
+    const questions = await Question.find();
+    res.json(questions);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 
 
 
